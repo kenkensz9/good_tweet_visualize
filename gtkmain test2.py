@@ -1,5 +1,4 @@
 import requests
-from bs4 import BeautifulSoup
 import re
 import sys
 from openai import OpenAI
@@ -9,71 +8,12 @@ import os
 from datetime import datetime, timedelta
 import time
 import os
-import requests
 import base64
-import random
 import string
 import csv
-keywords = [
-        "好き", "人生", "過去", "性格", "わたし", "運命", "死", "言葉",
-        "世界", "愛", "夢", "恋", "現実", "恋愛", "幻想", "存在",
-        "未来", "時間", "性格", "思考", "哲学", "キス", "性欲",
-        "宇宙", "世", "永遠", "旅", "恋人", "脳", "女", "男",
-        "意識", "思想", "記憶", "将来", "生活", "異性", "知的",
-        "精神", "意味", "自我", "人間", "涙", "経験", "感情",
-        "自己", "関係", "文", "セックス", "内面", "感覚", "命",
-        "物語", "本", "計画", "内省", "信念", "真実", "人格"
-    ]
-
-idpattern = r"https://x\.com/(.*?)(\?utm_source)"
-twidpattern = r"twid:(\d+)"
 
 # OpenAI APIキーを設定
 client = OpenAI()
-
-def search():
-  #global keywords
-  keywords = [
-        "好き", "人生", "過去", "性格", "わたし", "運命", "死", "言葉",
-        "世界", "愛", "夢", "恋", "現実", "恋愛", "幻想", "存在",
-        "未来", "時間", "性格", "思考", "哲学", "キス", "性欲",
-        "宇宙", "世", "永遠", "旅", "恋人", "脳", "女", "男",
-        "意識", "思想", "記憶", "将来", "生活", "異性", "知的",
-        "精神", "意味", "自我", "人間", "涙", "経験", "感情",
-        "自己", "関係", "文", "セックス", "内面", "感覚", "命",
-        "物語", "本", "計画", "内省", "信念", "真実", "人格"
-    ]
-  random.shuffle(keywords)
-  if keywords:  # keywordsが空でないことを確認
-    for _ in range(1):
-        keywords.pop(random.randint(0, len(keywords) - 1))
-  keyword="+OR+".join(keywords)
-  #keyword="好き+OR+人生+OR+過去+OR+性格+OR+わたし+OR+運命+OR+死+OR+言葉+OR+世界+OR+愛+OR+夢+OR+恋+OR+現実+OR+恋愛+OR+幻想+OR+存在+OR+未来+OR+時間+OR+性格+OR+思考+OR+哲学+OR+キス+OR+性欲+OR+宇宙+OR+世+OR+永遠+OR+旅+OR+恋人+OR+脳+OR+女+OR+男+OR+意識+OR+思想+OR+思考+OR+記憶+OR+将来+OR+生活+OR+異性+OR+知的+OR+精神+OR+意味+OR+自我+OR+人間+OR+涙+OR+経験+OR+感情+OR+自己+OR+関係+OR+文+OR+セックス+OR+内面+OR+感覚+OR+命+OR+物語+OR+本+OR+計画+OR+内省+OR+信念+OR+真実+OR+人格"
-  # URLの指定
-
-  proxy_choices = ['36.88.170.170:8080'] 
-  proxy = random.choice(proxy_choices) 
-  proxies = {'http': 'http://%s' % proxy, 'https': 'http://%s' % proxy} 
-  proxies = {'http': '37.235.53.208:4006', 'https': '37.235.53.208:4006'} 
-  url = "https://search.yahoo.co.jp/realtime/search?p="+keyword
-
-  # ページ内容を取得
-  time.sleep(5)
-  print("問合せ開始")  
-  #response = requests.get(url, proxies=proxies)
-  response = requests.get(url)
-  print("問合せ完了")
-  time.sleep(3)
-  # レスポンスのステータスコードが200の場合、内容を取得
-  if response.status_code == 200:
-      page_content = response.content
-      # BeautifulSoupでHTMLを解析
-      soup = BeautifulSoup(page_content, 'html.parser')
-  else:
-      print(f"Failed to retrieve the page. Status code: {response.status_code}")
-      sys.exit()
-  tweet_divs = soup.find_all("div", class_="Tweet_TweetContainer__gC_9g Tweet_overall__Ljbm4")
-  return tweet_divs
 
 
 def contains_keywords(text):
@@ -580,7 +520,7 @@ def on_message(ch, method_frame, _header_frame, body, thrds):
 
 
 # RabbitMQ接続設定
-credentials = pika.PlainCredentials('user1', 'newpass123')
+credentials = pika.PlainCredentials('test_user', 'test_password')  # テスト用のユーザー名とパスワード
 # 心拍数を5秒に設定（長時間実行時に接続を維持するため）
 parameters = pika.ConnectionParameters(
     'localhost', credentials=credentials, heartbeat=5)
@@ -589,17 +529,17 @@ connection = pika.BlockingConnection(parameters)  # ブロッキング接続の�
 channel = connection.channel()
 # RabbitMQ Exchangeの宣言
 channel.exchange_declare(
-    exchange="tweets_queue",
+    exchange="test_tweets_queue",  # テスト用のキュー名
     exchange_type=ExchangeType.direct,
     passive=False,
     durable=True,
     auto_delete=False)
 
 # Queueの宣言（メッセージを保持するキュー）
-channel.queue_declare(queue="tweets_queue", auto_delete=False)
+channel.queue_declare(queue="test_tweets_queue", auto_delete=False)  # テスト用のキュー名
 # キューとExchangeのバインディング（ルーティングキーで指定）
 channel.queue_bind(
-    queue="tweets_queue", exchange="tweets_queue", routing_key="tweets_queue")
+    queue="test_tweets_queue", exchange="test_tweets_queue", routing_key="test_tweets_queue")  # テスト用のキュー名
 
 # プレフェッチ数を1に設定（並列スレッド数を抑えるための設定）
 channel.basic_qos(prefetch_count=1)
@@ -609,7 +549,7 @@ threads = []
 # on_message関数を使用するための部分適用
 on_message_callback = functools.partial(on_message, thrds=threads)
 # メッセージ受信の開始
-channel.basic_consume(on_message_callback=on_message_callback, queue='tweets_queue')
+channel.basic_consume(on_message_callback=on_message_callback, queue='test_tweets_queue')
 
 try:
     # メッセージの受信と処理の開始
