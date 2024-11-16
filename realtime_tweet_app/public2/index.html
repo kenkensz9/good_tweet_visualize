@@ -1,0 +1,362 @@
+<!-- good_tweet_kasika/index.html -->
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8"> <!-- UTF-8を指定 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ツイダマ(言霊)レーダー</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="emotion-names">
+        <span class="joy">喜び</span>
+        <span class="trust">信頼</span> <!-- 新しい感情を追加 -->
+        <span class="anticipation">期待</span>
+        <span class="surprise">驚き</span>
+        <span class="sadness">悲しみ</span>
+        <span class="fear">恐れ</span>
+        <span class="disgust">嫌悪</span>
+        <span class="anger">怒り</span>
+        <span class="exp" style="margin-left: 0px; color: white; font-weight: normal;">←ツイート中の感情バンド</span> <!-- 右に移動 -->
+        <span class="exp" style="margin-left: 10px; color: white; font-weight: normal;">↓AI画像生成(想像的)と説明</span> <!-- 右に移動 -->
+        <span class="exp" style="margin-left: 50px; color: white; font-weight: normal;">↓AI画像生成(現実的)と説明</span> 
+        <span class="exp" style="margin-left: 30px; color: white; font-weight: normal;">↓AIによる感想と類似ツイート</span> 
+
+    </div>
+
+    <div class="tweet-container" id="tweet-container">
+        <!-- ツイートユニットがここに動的に追加されます -->
+    </div>
+<!-- Google tag (gtag.js) -->
+ <script async src="https://www.googletagmanager.com/gtag/js?id=G-NE5REM1TDC"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-NE5REM1TDC');
+        let currentTweetIndex = 0; // 現在のツイートインデックス
+        const initialTweetsCount = 8; // 初期表示のツイート数
+        const tweetsPerLoad = 10; // スクロールごとに読み込むツイート数
+        let tweets = []; // ツイートを格納する配列
+
+        const socket = new WebSocket('wss://www.kenkensz9.com:3001'); // WebSocket接続をHTTPSに変更
+
+        socket.onmessage = (event) => {
+            let message;
+
+            // 受信したデータをパース
+            try {
+                message = JSON.parse(event.data); // 受信したメッセージを更新
+            } catch (error) {
+                console.error("受信したデータのパースエラー:", error);
+                return;
+            }
+
+            // メッセージタイプに応じて処理を分ける
+            if (message.type === 'initial') {
+                // 初回データを処理
+                const initialTweets = message.data;
+                console.log("初回ツイートを受信:", initialTweets);
+                initialTweets.forEach(tweet => {
+                    if (Array.isArray(tweet)) {
+                        const tweetString = tweet.join(','); // 配列をカンマで結合して文字列に変換
+                        if (!tweets.includes(tweetString)) { // 既存のツイートに含まれていない場合
+                            console.log("データ1")
+                            tweets.push(tweetString); // 新しいツイートを追加
+                        }
+                    }
+                });
+                loadTweets(3); // 初期ツイートを表示
+            } else if (message.type === 'new') {
+                // 新しいツイートを処理
+                tweets=[]
+                const newTweets = message.data;
+                console.log("新しいツイートを受信:", newTweets);
+                newTweets.forEach(newTweet => {
+                    if (Array.isArray(newTweet)) {
+                        const tweetString = newTweet.join(','); // 配列をカンマで結合して文字列に変換
+                        if (!tweets.includes(tweetString)) { // 既存のツイートに含まれていない場合
+                            console.log("データ2")
+
+                            tweets.push(tweetString); // 新しいツイートを追加
+                        }
+                    }
+                });
+                loadTweets(2); // 新しいツイートを表示
+            } else {
+                console.warn("未知のメッセージタイプ:", message.type);
+            }
+        };
+
+        socket.onopen = () => {
+            console.log('WebSocket connection established');
+            socket.send('初回データをリクエスト'); // サーバーにデータをリクエスト
+        };
+
+        socket.onclose = () => {
+            console.log('WebSocket connection closed');
+        };
+
+        function loadTweets(hantei) {
+            const tweetContainer = document.getElementById('tweet-container');
+            const reversedTweets = tweets.slice() // ツイートを逆順にする
+
+            let startIndex, endIndex;
+            if (hantei === 1) {
+                // 初期ロード
+                startIndex = 0;
+                endIndex = Math.min(initialTweetsCount, reversedTweets.length);
+            } else if (hantei === 2) {
+                // 新しいツイートの追加
+                startIndex = 0;
+                endIndex = 1;
+            } else {
+                // スクロールによる追加ロード
+                startIndex = currentTweetIndex;
+                endIndex = Math.min(currentTweetIndex + tweetsPerLoad, reversedTweets.length);
+            }
+
+            for (let i = startIndex; i < endIndex; i++) {
+                const tweet = reversedTweets[i];
+                if (tweet) {
+                    // tweetが配列であるかどうかを確認
+                    let parts;
+                    if (Array.isArray(tweet)) {
+                        parts = tweet; // 既に配列の場合はそのまま使用
+                    } else if (typeof tweet === 'string') {
+                        parts = tweet.split(','); // カンマで分割
+                    } else {
+                        console.warn("受信したツイートが文字列でも配列でもありません:", tweet);
+                        continue; // 何も処理しない
+                    }
+
+                    if (parts[4]) { // 5番目の要素が存在する場合
+                        const tweetText = parts[4].replace(/"/g, ''); // 5番目の要素を取得
+                        const tweetUnit = document.createElement('div'); // ツイートユニットを作成
+                        tweetUnit.className = 'tweet-unit'; // クラスを追加
+
+                        // ツイート情報部分を作成
+                        const tweetInfoDiv = document.createElement('div');
+                        tweetInfoDiv.className = 'tweet-info'; // 新しいクラスを追加
+
+                        // ツイート時刻、ツイート主の名前、ツイート主のIDを追加
+                        const tweetTime = document.createElement('span');
+                        tweetTime.innerText = parts[3].replace(/"/g, ''); // ツイート時刻
+                        const tweetUserName = document.createElement('a'); // リンク要素を作成
+                        tweetUserName.href = `https://x.com/${parts[1].replace(/"/g, '')}`; // ツイート主のリンクを設定
+                        tweetUserName.innerText = `@${parts[1].replace(/"/g, '')}`; // ツイート主の名前
+                        tweetUserName.target = '_blank'; // 新しいタブで開く
+                        const tweetUserId = document.createElement('span');
+                        tweetUserId.innerText = parts[0].replace(/"/g, ''); // ツイート主のIDの前に@を付け、ダブルクォーテーションを削除
+
+                        // 各要素を tweetInfoDiv に追加
+                        tweetInfoDiv.appendChild(tweetTime);
+                        tweetInfoDiv.appendChild(document.createTextNode(' ')); // スペースを追加
+                        tweetInfoDiv.appendChild(tweetUserName);
+                        tweetInfoDiv.appendChild(document.createTextNode(' ')); // スペースを追加
+                        tweetInfoDiv.appendChild(tweetUserId);
+
+                        // ツイートリンクを作成
+                        const tweetLink = document.createElement('a');
+                        tweetLink.href = `https://x.com/${parts[1]}/status/${parts[2]}`.replace(/"/g, ''); // ツイートリンクのURLを設定
+                        tweetLink.innerText = '＜ツイートリンク＞'; // リンクのテキスト
+                        tweetLink.target = '_blank'; // 新しいタブで開く
+                        // tweetLink.style.color = '#E0E0E0'; // リンクの色を設定（必要に応じて調整）
+                        tweetLink.style.textDecoration = 'none'; // 下線を消す（必要に応じて調整）
+
+                        // ツイートリンクを tweetInfoDiv に追加
+                        tweetInfoDiv.appendChild(tweetLink);
+
+                        // 画像部分を作成
+                        const imagesDiv = document.createElement('div');
+                        imagesDiv.className = 'images';
+
+                        // 画像1
+                        const img1 = document.createElement('img');
+                        const port = window.location.port; // 現在のポートを取得
+                        if (port === '3001') {
+                            img1.src = `/gendimg/${parts[2]}-1.jpg`.replace(/"/g, ''); // 3001ポートの場合の画像パス
+                        } else {
+                            img1.src = `/good_tweet_kasika/realtime_tweet_app/filesrc/gendimg/${parts[2]}-1.jpg`.replace(/"/g, ''); // 443ポートの場合の画像パス
+                        }
+                        img1.alt = '画像1';
+                        const caption1 = document.createElement('div');
+                        caption1.className = 'caption'; // キャプション用のクラスを追加
+                        caption1.innerText = parts[7]; // キャプションのテキストを変更
+
+                        // 画像2
+                        const img2 = document.createElement('img');
+                        if (port === '3001') {
+                            img2.src = `/gendimg/${parts[2]}-2.jpg`.replace(/"/g, ''); // 3001ポートの場合の画像パス
+                        } else {
+                            img2.src = `/good_tweet_kasika/realtime_tweet_app/filesrc/gendimg/${parts[2]}-2.jpg`.replace(/"/g, ''); // 443ポートの場合の画像パス
+                        }
+                        img2.alt = '画像2';
+                        const caption2 = document.createElement('div');
+                        caption2.className = 'caption'; // キャプション用のクラスを追加
+                        caption2.innerText = parts[9]; // キャプションのテキストを変更
+
+                        // 画像とキャプションを追加
+                        imagesDiv.appendChild(img1);
+                        imagesDiv.appendChild(caption1);
+                        imagesDiv.appendChild(img2);
+                        imagesDiv.appendChild(caption2);
+
+                        // AIのコメント部分を作成
+                        const aiCommentsDiv = document.createElement('div');
+                        aiCommentsDiv.className = 'ai-comments';
+
+                        // AIのコメントのテキストを追加
+                        const aiCommentElement = document.createElement('p');
+                        aiCommentElement.innerText = "AI所見："+parts[5]; // AIのコメントを変更
+                        aiCommentElement.innerHTML += '<br><br>'; // 改行を追加
+                        // 似ているツイートのための新しいdivを作成
+                        const similarTweetDiv = document.createElement('div');
+                        similarTweetDiv.className = 'similar-tweet'; // 新しいクラスを追加
+                        const n = 0; // 何個目の<br>までを取得するか指定
+                        const partsText = ""+parts[11].replace(/"/g, '').replace(/(\d+)%/g, '$1% 類似：');; // 似ているツイートのテキスト
+                        const splitText = partsText.split(/<br>/); // <br>で分割
+
+                        // 最初のn個の要素を取得
+                        const limitedText = splitText.slice(0, n + 1).join("\n"); // n個目までを改行で結合
+
+                        similarTweetDiv.innerText = limitedText; // 取得したテキストを設定
+                        //similarTweetDiv.innerText = parts[11].replace(/<br>/g,"\n"); // 似ているツイートのテキスト
+
+                        // テキストを aiCommentsDiv に追加
+                        aiCommentsDiv.appendChild(aiCommentElement);
+                        aiCommentsDiv.appendChild(similarTweetDiv);
+
+                        // ツイート内容部分を作成
+                        const tweetContentDiv = document.createElement('div');
+                        tweetContentDiv.className = 'tweet-content';
+                        const tweetTextElement = document.createElement('p');
+                        tweetTextElement.innerText = tweetText; // ツイート本文を設定
+                        tweetContentDiv.appendChild(tweetTextElement);
+
+                        // 感情属性を示す線を追加
+                        const emotionLinesDiv = document.createElement('div');
+                        emotionLinesDiv.className = 'emotion-lines';
+
+                        // 感情の辞書を定義
+                        const emotionDictionary = {
+                            "警戒": { class: "alert", color: "lightcoral", thickness: "60px" },
+                            "激怒": { class: "fury", color: "darkred", thickness: "60px" },
+                            "憎悪": { class: "hatred", color: "darkviolet", thickness: "60px" },
+                            "悲痛": { class: "sorrow", color: "darkgray", thickness: "60px" },
+                            "驚嘆": { class: "wonder", color: "lightblue", thickness: "60px" },
+                            "恐怖": { class: "terror", color: "darkblue", thickness: "60px" },
+                            "感嘆": { class: "admiration", color: "lightgreen", thickness: "60px" },
+                            "喜び": { class: "joy", color: "yellow", thickness: "30px" },
+                            "期待": { class: "anticipation", color: "pink", thickness: "30px" },
+                            "怒り": { class: "anger", color: "red", thickness: "30px" },
+                            "嫌悪": { class: "disgust", color: "brown", thickness: "30px" },
+                            "悲しみ": { class: "sadness", color: "purple", thickness: "30px" },
+                            "驚き": { class: "surprise", color: "orange", thickness: "30px" },
+                            "恐れ": { class: "fear", color: "blue", thickness: "30px" },
+                            "信頼": { class: "trust", color: "green", thickness: "30px" },
+                            "平穏": { class: "calm", color: "lightgray", thickness: "10px" },
+                            "興味": { class: "interest", color: "lightyellow", thickness: "10px" },
+                            "煩さ": { class: "annoyance", color: "lightpink", thickness: "10px" },
+                            "退屈": { class: "boredom", color: "lightcyan", thickness: "10px" },
+                            "憂い": { class: "melancholy", color: "lightcoral", thickness: "10px" },
+                            "動揺": { class: "agitation", color: "lightgreen", thickness: "10px" },
+                            "心配": { class: "worry", color: "lightblue", thickness: "10px" },
+                            "恍惚": { class: "ecstasy", color: "lightpink", thickness: "60px" },
+                            "容認": { class: "acceptance", color: "lightgray", thickness: "10px" }
+                        };
+
+                        // 感情のグループを定義
+                        const emotionGroups = [
+                            ["喜び", "恍惚", "平穏"],
+                            ["信頼", "感嘆", "容認"],
+                            ["期待", "警戒", "興味"],
+                            ["驚き", "驚嘆", "動揺"],
+                            ["悲しみ", "悲痛", "憂い"],
+                            ["恐れ", "恐怖", "心配"],
+                            ["嫌悪", "憎悪", "退屈"],
+                            ["怒り", "激怒", "煩さ"]
+                        ];
+
+                        // 感情の行を取得
+                        const emotionRows = parts[10].replace(/"/g, '').split(' '); // ダブルクォーテーションを削除してからスペースで分割
+
+                        // 各グループの感情を可視化
+                        emotionGroups.forEach(group => {
+                            group.forEach(emotion => {
+                                if (emotionRows.includes(emotion)) { // parts[10]に感情が存在するか判定
+                                    const lineDiv = document.createElement('div');
+                                    const emotionInfo = emotionDictionary[emotion]; // 辞書から感情の情報を取得
+
+                                    if (emotionInfo) {
+                                        lineDiv.className = `line ${emotionInfo.class}`; // 感情ごとのクラスを追加
+                                        lineDiv.setAttribute('data-emotion', emotion); // 感情をデータ属性として追加
+                                        lineDiv.style.backgroundColor = emotionInfo.color; // 色を設定
+                                        lineDiv.style.width = emotionInfo.thickness; // 太さを設定
+                                        lineDiv.textContent = lineDiv.getAttribute('data-emotion'); // data-emotionの値を表示
+                                        lineDiv.style.color = 'black'; // 文字色を黒に設定
+                                        lineDiv.style.textShadow = '0 0 2px white, 0 0 2px white'; // 白い輪郭を設定
+                                        lineDiv.style.whiteSpace = 'nowrap'; // 文字を横に配置
+                                        emotionLinesDiv.appendChild(lineDiv);
+                                    }
+                                } else {
+                                    // 感情が存在しない場合は透明なラインを作成
+                                    const lineDiv = document.createElement('div');
+                                    lineDiv.className = 'line transparent'; // 透明なライン用のクラスを追加
+                                    lineDiv.style.backgroundColor = 'transparent'; // 透明な色を設定
+                                    lineDiv.style.width = '0px'; // 太さを設定（必要に応じて調整）
+                                    lineDiv.textContent = ''; // テキストは空に設定
+                                    emotionLinesDiv.appendChild(lineDiv); // 透明なラインを追加
+                                }
+                            });
+                        });
+
+                        tweetContentDiv.appendChild(emotionLinesDiv);
+
+                        // ツイートユニットに要素を追加
+                        tweetUnit.appendChild(tweetInfoDiv); // tweetInfoDivを追加
+                        tweetUnit.appendChild(tweetContentDiv);
+                        tweetUnit.appendChild(imagesDiv);
+                        tweetUnit.appendChild(aiCommentsDiv);
+                        console.log(hantei,"hantei")
+                        // コンテナにツイートユニットを追加
+                        if (hantei === 1) {
+                            console.log("最初11",tweetUnit)
+                            console.log("最初1",tweetContainer.firstChild)
+                            tweetContainer.insertBefore(tweetUnit, tweetContainer.firstChild);
+                            //tweetUnit=[]
+                            //tweetContainer.appendChild(tweetUnit); // 通常の追加
+                        } else if (hantei === 2) {
+                            //tweetContainer.appendChild(tweetUnit);
+                            console.log("最初22",tweetUnit)
+                            console.log("最初2",tweetContainer.firstChild)
+                            tweetContainer.insertBefore(tweetUnit, tweetContainer.firstChild);
+                            //tweetUnit=[] // 一番上に追加
+                        } else if (hantei === 3) {
+                            console.log("最初33",tweetUnit)
+                            console.log("最初3",tweetContainer.firstChild)
+                            tweetContainer.appendChild(tweetUnit); // 通常の追加
+                            //tweetUnit=[]
+                        }
+                        
+                    }
+                    tweetUnit=[]
+                }
+            } 
+
+            currentTweetIndex = endIndex; // 現在のツイートインデックスを更新
+        }
+
+        // スクロールイベントリスナーを追加
+        window.addEventListener('scroll', () => {
+            if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 100) {
+                loadTweets(3); // スクロールによる追加ロード
+            }
+        });
+
+        // 初期ロード
+        //loadTweets(2);
+    </script>
+</body>
+</html>

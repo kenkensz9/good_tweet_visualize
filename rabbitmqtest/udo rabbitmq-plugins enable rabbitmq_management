@@ -1,0 +1,16 @@
+[0;1;32m●[0m rabbitmq-server.service - RabbitMQ Messaging Server
+     Loaded: loaded (]8;;file://ken/usr/lib/systemd/system/rabbitmq-server.service/usr/lib/systemd/system/rabbitmq-server.service]8;;; [0;1;32menabled[0m; preset: [0;1;32menabled[0m)
+     Active: [0;1;32mactive (running)[0m since Thu 2024-10-24 17:07:55 JST; 44s ago
+   Main PID: 119931 (beam.smp)
+      Tasks: 26 (limit: 2306)
+     Memory: 94.4M (peak: 111.7M)
+        CPU: 5.833s
+     CGroup: /system.slice/rabbitmq-server.service
+             ├─[0;38;5;245m119931 /usr/lib/erlang/erts-13.2.2.5/bin/beam.smp -W w -MBas ageffcbf -MHas ageffcbf -MBlmbcs 512 -MHlmbcs 512 -MMmcs 30 -pc unicode -P 1048576 -t 5000000 -stbt db -zdbbl 128000 -sbwt none -sbwtdcpu none -sbwtdio none -- -root /usr/lib/erlang -bindir /usr/lib/erlang/erts-13.2.2.5/bin -progname erl -- -home /var/lib/rabbitmq -- -pa "" -noshell -noinput -s rabbit boot -boot start_sasl -syslog logger "[]" -syslog syslog_error_logger false -kernel prevent_overlapping_partitions false -enable-feature maybe_expr[0m
+             ├─[0;38;5;245m119941 erl_child_setup 65536[0m
+             ├─[0;38;5;245m119997 /usr/lib/erlang/erts-13.2.2.5/bin/inet_gethost 4[0m
+             ├─[0;38;5;245m119998 /usr/lib/erlang/erts-13.2.2.5/bin/inet_gethost 4[0m
+             └─[0;38;5;245m120046 /bin/sh -s rabbit_disk_monitor[0m
+
+Oct 24 17:07:49 ken systemd[1]: Starting rabbitmq-server.service - RabbitMQ Messaging Server...
+Oct 24 17:07:55 ken systemd[1]: Started rabbitmq-server.service - RabbitMQ Messaging Server.

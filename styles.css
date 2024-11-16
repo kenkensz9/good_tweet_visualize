@@ -1,0 +1,152 @@
+/* styles.css */
+
+/* 全体の背景色と文字色を設定 */
+body {
+    background-color: #121212; /* ダークグレーの背景色 */
+    color: #E0E0E0; /* 明るい文字色 */
+    font-family: Arial, sans-serif; /* フォントを設定 */
+}
+
+.tweet-container {
+    display: flex;
+    flex-direction: column; /* 縦に並べる */
+    padding-top: 50px; /* 上部のパディングを39pxに設定 */
+}
+
+.tweet-unit {
+    display: inline-flex; /* ツイートユニット内の要素を横に並べる */
+    border: 1px solid #444; /* ダークな枠線を追加 */
+    padding: 10px; /* 内側の余白 */
+    margin-bottom: 20px; /* ツイートユニット間の余白 */
+    border-radius: 5px; /* 角を丸くする */
+    background-color: #1E1E1E; /* ツイートユニットの背景色をダークに */
+}
+
+.images {
+    display: flex; /* 横に並べるためにflexboxを使用 */
+    margin-right: 10px; /* 画像とツイート本文の間のスペース */
+}
+
+.images img {
+    width: 130px; /* 幅を設定（必要に応じて調整） */
+    height: 130px; /* 高さを設定（必要に応じて調整） */
+    object-fit: cover; /* 画像のアスペクト比を維持しつつ、正方形に切り抜く */
+}
+
+.tweet-content {
+    position: relative; /* 相対位置を設定 */
+    padding: 20px; /* パディングを追加してテキストと線の間隔を確保 */
+    width: 400px; /* 幅を固定（必要に応じて調整） */
+    min-width: 400px; /* 最小幅を設定（必要に応じて調整） */
+    max-width: 400px; /* 最大幅を設定（必要に応じて調整） */
+    margin: 0; /* 中央揃えを解除 */
+    z-index: 1;
+    background-color: #2A2A2A; /* ツイート内容の背景色をダークに */
+}
+
+.emotion-lines {
+    display: flex; /* フレックスボックスを使用 */
+    justify-content: space-around; /* 各線の間隔を均等に */
+    align-items: flex-end; /* 線を下に揃える */
+    position: absolute; /* 絶対位置を設定 */
+    top: 0; /* 上に配置 */
+    left: 0; /* 左に配置 */
+    width: 100%; /* 幅を100%に設定 */
+    max-width: 600px; /* 最大幅を設定（必要に応じて調整） */
+    margin: 0 auto; /* 中央揃えのためのマージン */
+    z-index: -1; /* 背面に配置 */
+}
+
+.line {
+    width: 4px; /* 線の幅を設定 */
+    height: 30px; /* 線の高さを大きく設定（必要に応じて調整） */
+    margin: 0 5px; /* 横の間隔を設定 */
+}
+
+.anger {
+    background-color: red; /* 怒りの色 */
+}
+
+.joy {
+    background-color: yellow; /* 喜びの色 */
+}
+
+.trust {
+    background-color: green; /* 受容の色 */
+}
+
+.surprise {
+    background-color: orange; /* 驚きの色 */
+}
+
+.fear {
+    background-color: blue; /* 恐れの色 */
+}
+
+.sadness {
+    background-color: purple; /* 悲しみの色 */
+}
+
+.disgust {
+    background-color: brown; /* 嫌悪の色 */
+}
+
+.anticipation {
+    background-color: pink; /* 期待の色 */
+}
+
+.emotion-names {
+    position: fixed; /* 固定位置に設定 */
+    top: 0; /* 上に配置 */
+    left: 0; /* 左に配置 */
+    width: 100%; /* 幅を100%に設定 */
+    background-color: #1E1E1E; /* 背景色をダークに */
+    padding: 10px 0 10px 860px; /* 上下のパディングは10px、左のパディングは260px */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5); /* 影を追加 */
+    z-index: 1000; /* 他の要素の上に表示 */
+}
+
+.emotion-names span {
+    margin-right: 15px; /* 各感情名の間隔を設定（必要に応じて調整） */
+    font-weight: bold; /* 太字に設定 */
+    color: #000000; /* 明るい文字色 */
+}
+
+.caption {
+    text-align: center; /* キャプションを中央揃え */
+    font-size: 14px; /* フォントサイズを設定 */
+    color: #E0E0E0; /* 明るい文字色 */
+    margin-top: 5px; /* 画像との間隔を設定 */
+    width: 200px; /* 幅を固定（必要に応じて調整） */
+    word-wrap: break-word; /* 単語の途中で改行を許可 */
+    overflow-wrap: break-word; /* 単語の途中で改行を許可（古いブラウザ対応） */
+    display: block; /* ブロック要素として表示 */
+}
+
+.tweet-info {
+    display: grid; /* フレックスボックスを使用 */
+    justify-content: flex-start; /* 左揃え */
+    margin-bottom: 10px; /* 下の要素との間隔を設定 */
+    font-size: 14px; /* フォントサイズを設定 */
+    color: #E0E0E0; /* 明るい文字色 */
+    width: 150px; /* 幅を固定（必要に応じて調整） */
+    word-wrap: break-word; /* 単語の途中で改行を許可 */
+    overflow-wrap: break-word; /* 単語の途中で改行を許可（古いブラウザ対応） */
+}
+
+.tweet-info span {
+    margin: 0; /* 各要素のマージンをゼロに設定 */
+    padding: 0; /* 各要素のパディングをゼロに設定 */
+    margin-right: 10px; /* 各要素の間隔を設定 */
+    white-space: nowrap; /* 各要素が改行されないようにする */
+}
+
+.ai-comments {
+    margin-top: 10px; /* 上の要素との間隔を設定 */
+    color: #E0E0E0; /* 明るい文字色 */
+}
+
+.ai-comments p {
+    margin: 0; /* 各段落のマ��ジンをリセット */
+    font-size: 14px; /* フォントサイズを設定 */
+}
